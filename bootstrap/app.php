@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,5 +17,16 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Custom API 404 handler
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            
+            // if the request is for the API
+            if ($request->is('api/*')) {
+                
+                // Return a JSON response for API 404 errors
+                return response()->json([
+                    'message' => 'Recurso no encontrado.'
+                ], 404);
+            }
+        });
     })->create();
