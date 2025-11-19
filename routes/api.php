@@ -10,6 +10,8 @@ Route::get('/user', function (Request $request) {
 
 Route::prefix('v1')->group(function () {
     
-    //Endpoint para crear el secreto
+    //Endpoint for creating a secret
     Route::post('secrets', [SecretController::class, 'store']);
+    //Endpoint for retrieving a secret
+    Route::get('secrets/{secret}', [SecretController::class, 'show']);
 });
