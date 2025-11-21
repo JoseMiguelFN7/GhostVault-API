@@ -22,14 +22,19 @@ class StoreSecretRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // P1.1: El blob cifrado que nos manda el cliente
-            'content' => 'required|string|max:100000', // Texto, max 100KB
+            // Encrypted content from client
+            'content' => 'required|string|max:100000',
 
-            // P1.4: El flag que nos dice si debemos pedir contraseña al leer
+            // Flag to require password when reading
             'requires_password' => 'sometimes|boolean',
 
-            // P2.2: Opciones de expiración
+            // Expiration time in hours
             'expires_in_hours' => 'sometimes|nullable|integer|min:1|max:168',
+
+            // Optional array of encrypted files
+            'files' => 'sometimes|array|max:5',
+            'files.*.encrypted_name' => 'required|string|max:500',
+            'files.*.file_data' => 'required|string',
         ];
     }
 }

@@ -19,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Register the SecretObserver to handle file deletion
+        \App\Models\Secret::observe(\App\Observers\SecretObserver::class);
     }
 }
