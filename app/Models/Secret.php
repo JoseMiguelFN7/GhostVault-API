@@ -41,4 +41,12 @@ class Secret extends Model
     {
         return 'uuid';
     }
+
+
+    // A secret can have many files.
+
+    public function files()
+    {
+        return $this->hasMany(File::class);
+    }
 }

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class SecretController extends Controller
 {
-    // Endpoint for creating a secret
+    // Create a new secret
     public function store(StoreSecretRequest $request)
     {
         $validated = $request->validated();
@@ -22,51 +22,99 @@ class SecretController extends Controller
         $hours = $validated['expires_in_hours'] ?? 1;
         $secret->expires_at = now()->addHours($hours);
         $secret->save();
+
+        // Store attached files if any
+        if (isset($validated['files']) && is_array($validated['files'])) {
+            foreach ($validated['files'] as $fileData) {
+                try {
+                    // Sanitize filename for safe storage
+                    $sanitizedName = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $fileData['encrypted_name']);
+                    $filename = $sanitizedName . '.dat';
+                    $storagePath = "secrets/{$filename}";
+
+                    // Store file as Base64 string
+                    \Illuminate\Support\Facades\Storage::put($storagePath, $fileData['file_data']);
+
+                    // Save metadata to database
+                    $secret->files()->create([
+                        'encrypted_name' => $fileData['encrypted_name'],
+                        'storage_path' => $storagePath,
+                    ]);
+                } catch (\Exception $e) {
+                    // Log error but continue processing other files
+                    \Illuminate\Support\Facades\Log::error('Error storing file: ' . $e->getMessage());
+                }
+            }
+        }
         
         return response()->json([
-            'message' => 'Secreto creado con éxito',
+            'message' => 'Secret created successfully',
             'uuid' => $secret->uuid,
             'requires_password' => $secret->requires_password,
             'expires_at' => $secret->expires_at,
         ], 201);
     }
 
-    // Endpoint for retrieving and deleting a secret
+    // Retrieve and delete secret (burn-on-read)
     public function show(Secret $secret)
     {
-        // Check if the secret has expired
+        // Check expiration
         if ($secret->expires_at->isPast()) {
             
-            // if expired, delete it and return a not found response
+            // Delete if expired
             $secret->delete(); 
             
             return response()->json([
-                'message' => 'Este secreto ha expirado y fue destruido.'
+                'message' => 'Secret has expired and was destroyed'
             ], 404);
         }
 
-        //burn-on-read: return the secret and delete it
+        // Burn-on-read: return content then delete
         try {
-            $dataToReturn = null;
+            $responseData = null;
 
-            DB::transaction(function () use ($secret, &$dataToReturn) {
+            DB::transaction(function () use ($secret, &$responseData) {
                 
-                //Prepare the data to return
-                $dataToReturn = new SecretResource($secret);
+                // Read files before deletion
+                $secret->load('files');
+                
+                // Load files from storage
+                $filesArray = $secret->files->map(function ($file) {
+                    try {
+                        // File is already Base64
+                        if (\Illuminate\Support\Facades\Storage::exists($file->storage_path)) {
+                            $fileContent = \Illuminate\Support\Facades\Storage::get($file->storage_path);
+                            
+                            return [
+                                'encrypted_name' => $file->encrypted_name,
+                                'file_data' => $fileContent,
+                            ];
+                        }
+                        return null;
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error("Failed to read file {$file->storage_path}: " . $e->getMessage());
+                        return null;
+                    }
+                })->filter()->values()->toArray();
 
-                //Delete the secret from the database
+                // Prepare response data
+                $responseData = [
+                    'content' => $secret->content,
+                    'requires_password' => $secret->requires_password,
+                    'files' => $filesArray,
+                ];
+
+                // Delete secret (Observer handles files)
                 $secret->delete();
 
-                //Delete files associated with the secret if any (TO BE IMPLEMENTED)
+            }, 3);
 
-            }, 3); // Retry up to 3 times in case of deadlock
-
-            //Return the secret data
-            return $dataToReturn;
+            // Return secret data
+            return response()->json($responseData);
         } catch (\Exception $e) {
-            // if any error occurs during the transaction, return an error response. The secret will remain in the database.
+            // Error handling
             return response()->json([
-                'message' => 'No se pudo leer el secreto en este momento, por favor intente de nuevo.'
+                'message' => 'Unable to read secret, please try again'
             ], 500);
         }
     }
