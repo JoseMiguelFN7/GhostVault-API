@@ -8,6 +8,8 @@ use App\Models\Secret;
 use App\Http\Resources\SecretResource;
 use App\Http\Requests\StoreSecretRequest;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class SecretController extends Controller
 {
@@ -33,7 +35,7 @@ class SecretController extends Controller
                     $storagePath = "secrets/{$filename}";
 
                     // Store file as Base64 string
-                    \Illuminate\Support\Facades\Storage::put($storagePath, $fileData['file_data']);
+                    Storage::put($storagePath, $fileData['file_data']);
 
                     // Save metadata to database
                     $secret->files()->create([
@@ -42,7 +44,7 @@ class SecretController extends Controller
                     ]);
                 } catch (\Exception $e) {
                     // Log error but continue processing other files
-                    \Illuminate\Support\Facades\Log::error('Error storing file: ' . $e->getMessage());
+                    Log::error('Error storing file: ' . $e->getMessage());
                 }
             }
         }
@@ -82,8 +84,8 @@ class SecretController extends Controller
                 $filesArray = $secret->files->map(function ($file) {
                     try {
                         // File is already Base64
-                        if (\Illuminate\Support\Facades\Storage::exists($file->storage_path)) {
-                            $fileContent = \Illuminate\Support\Facades\Storage::get($file->storage_path);
+                        if (Storage::exists($file->storage_path)) {
+                            $fileContent = Storage::get($file->storage_path);
                             
                             return [
                                 'encrypted_name' => $file->encrypted_name,
@@ -92,7 +94,7 @@ class SecretController extends Controller
                         }
                         return null;
                     } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::error("Failed to read file {$file->storage_path}: " . $e->getMessage());
+                        Log::error("Failed to read file {$file->storage_path}: " . $e->getMessage());
                         return null;
                     }
                 })->filter()->values()->toArray();
