@@ -28,7 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 
                 // Return a JSON response for API 404 errors
                 return response()->json([
-                    'message' => 'Recurso no encontrado.'
+                    'message' => 'Resource not found.'
                 ], 404);
             }
         });
