@@ -12,6 +12,14 @@
 
 ---
 
+## 👥 Authors
+
+- **José Ferreira** - [GitHub Profile](https://github.com/JoseMiguelFN7)
+- **Cesar Vethencourt** - [GitHub Profile](https://github.com/Cvethencourt)
+- **Javier Regnault** - [GitHub Profile](https://github.com/jregnaultt)
+
+---
+
 ## 🚀 Key Features
 
 -   🔥 **Strict Burn-on-Read:** Atomic deletion from the database immediately after the first successful read (ACID Transactions).
