@@ -25,7 +25,7 @@ class CheckApiKey
             
             // Return a 401 Unauthorized response if the API key is invalid or missing
             return response()->json([
-                'message' => 'Acceso denegado. API Key inválida o ausente.'
+                'message' => 'Access denied. Invalid or missing API key.'
             ], 401);
         }
 
