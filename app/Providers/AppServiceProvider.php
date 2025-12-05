@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Providers;
+use App\Models\Secret;
+use App\Observers\SecretObserver;
 
 use Illuminate\Support\ServiceProvider;
 
@@ -20,6 +22,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Register the SecretObserver to handle file deletion
-        \App\Models\Secret::observe(\App\Observers\SecretObserver::class);
+        Secret::observe(SecretObserver::class);
     }
 }

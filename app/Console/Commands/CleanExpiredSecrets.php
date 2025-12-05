@@ -19,7 +19,7 @@ class CleanExpiredSecrets extends Command
      *
      * @var string
      */
-    protected $description = 'Elimina permanentemente los secretos que han expirado';
+    protected $description = 'Permanently delete expired secrets from the database';
 
     /**
      * Execute the console command.
@@ -31,7 +31,11 @@ class CleanExpiredSecrets extends Command
 
         if ($count > 0) {
             // Delete expired secrets
-            Secret::where('expires_at', '<', now())->delete();
+            $expiredSecrets = Secret::where('expires_at', '<', now())->cursor();
+
+            foreach ($expiredSecrets as $secret) {
+                $secret->delete();
+            }
             
             // Output the number of deleted secrets
             $this->info("Se han eliminado {$count} secretos expirados.");
