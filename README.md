@@ -156,8 +156,7 @@ This action is destructive. Once a successful response is delivered, the record 
 Success Response (200):
 ```json
 {
-  "data": {
-    "content": "U2FsdGVkX1+...",
+  "content": "U2FsdGVkX1+...",
     "requires_password": true,
     "files": [
         {
@@ -165,7 +164,6 @@ Success Response (200):
             "file_data": "BASE64_ENCRYPTED_FILE_CONTENT..."
         }
     ]
-  }
 }
 ```
 
