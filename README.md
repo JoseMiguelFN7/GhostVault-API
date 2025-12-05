@@ -186,3 +186,9 @@ This will execute the cleanup task according to the configured frequency (defaul
 ## 📄 License
 
 This project is licensed under the MIT License.
+
+---
+
+## 🔗 Related Projects
+
+- [GhostVault Frontend](https://github.com/JoseMiguelFN7/GhostVault) - React Platform
